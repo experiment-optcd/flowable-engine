@@ -16,12 +16,12 @@ jobs:
       fail-fast: false
       matrix:
         postgres:
-        - 11
-        - 12
-        - 13
-        - 14
-        - 15
-        - 16
+          - 11
+          - 12
+          - 13
+          - 14
+          - 15
+          - 16
     services:
       postgres:
         image: postgres:${{ matrix.postgres }}
@@ -29,22 +29,31 @@ jobs:
           POSTGRES_PASSWORD: flowable
           POSTGRES_USER: flowable
         ports:
-        - 5432:5432
+          - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s
           --health-retries 5 --tmpfs /var/lib/postgresql/data:rw
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-java@v3
-      with:
-        distribution: zulu
-        java-version: 17
-    - name: Test
-      run: ./mvnw clean install ${MAVEN_ARGS} -PcleanDb,postgresql,distro -P'!include-spring-boot-samples'
-        -Djdbc.url=jdbc:postgresql://localhost:${{ job.services.postgres.ports[5432]
-        }}/flowable -Djdbc.username=flowable -Djdbc.password=flowable -Djdbc.driver=org.postgresql.Driver
-        -Dspring.datasource.url=jdbc:postgresql://localhost:${{ job.services.postgres.ports[5432]
-        }}/flowable -Dspring.datasource.username=flowable -Dspring.datasource.password=flowable
-        -Dmaven.test.redirectTestOutputToFile=false
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: Test
+        run: ./mvnw clean install ${MAVEN_ARGS} -PcleanDb,postgresql,distro -P'!include-spring-boot-samples'
+          -Djdbc.url=jdbc:postgresql://localhost:${{ job.services.postgres.ports[5432]
+          }}/flowable -Djdbc.username=flowable -Djdbc.password=flowable -Djdbc.driver=org.postgresql.Driver
+          -Dspring.datasource.url=jdbc:postgresql://localhost:${{ job.services.postgres.ports[5432]
+          }}/flowable -Dspring.datasource.username=flowable -Dspring.datasource.password=flowable
+          -Dmaven.test.redirectTestOutputToFile=false "-Dfailsafe.reports=false" "-Dtest.source.skip=true"
+          "-Dsurefire.useFile=false" "-Dsurefire.reportFormat=plain" "-Dmaven.test.skip=true"
+          "-DskipITs" "-Dsurefire.reportDirectory=target/surefire-reports-empty" "-Dsurefire.reportDirectory=."
+          "-DskipTests" "-Dmaven.compiler.testSource=1.8" "-Dmaven.compiler.testTarget=1.8"
+          "-Dtest.compile.skip=true" "-Dsurefire.reportDirectory=target/surefire-reports"
+          "-Dsurefire.reportDirectory=" "-Dmaven.compiler.skip=true" "-Dsurefire.reportDirectory=target/empty"
+          "-Dsurefire.skip=true" "-Dsurefire.reportFormat=none" "-Dsurefire.reportEncoding=UTF-8"
+          "-Dsurefire.reportsDirectory=" "-Dsurefire.reportDirectory=target/empty-surefire-reports"
+          "-Dmaven.surefire.reportFormat=none" "-Dsurefire.reportsDirectory=target/empty-surefire-reports"
+          "-Dmaven.compiler.skip=false" "-Dsurefire.skip=false"
 'on':
-- push
-- workflow_dispatch
+  - push
+  - workflow_dispatch
